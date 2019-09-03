@@ -1,6 +1,6 @@
 import { HttpService, Injectable, Request } from '@nestjs/common';
-import { Observable, of } from 'rxjs';
-import { delay, filter, finalize, map, repeat, repeatWhen, scan, skipWhile, take, takeWhile, tap } from 'rxjs/operators';
+import { Observable, of, throwError } from 'rxjs';
+import { catchError, delay, filter, finalize, map, repeat, repeatWhen, scan, skipWhile, take, takeWhile, tap } from 'rxjs/operators';
 
 /**
  * Our own polling operator!
@@ -50,28 +50,61 @@ export class ClientService {
     console.log(proxyToUrl);
     return this.httpService[method](proxyToUrl, body, { headers })
       .pipe(map((x: any) => {
-        return {
-          ...(x.data),
-          __proxyToUrl: proxyToUrl,
-        };
-      }));
+          return {
+            ...(x.data),
+            __proxyToUrl: proxyToUrl,
+          };
+        }),
+        catchError((err) => {
+          throw {
+            makeReqError: err,
+            proxyToUrl,
+            method,
+          };
+        }),
+      );
   }
 
-  poll(req: Request, headers, body, query, pollConfig: { pollCount: number, pollDelay: number, pollSuccessCb: (val: any) => boolean }) {
+  poll(req: Request, headers, body, query, pollConfig: { maxPollCount: number, pollDelay: number, pollSuccessCondition }) {
+    const pollSuccessCb = this.pollSuccessCb(pollConfig.pollSuccessCondition);
     return this.makeReq(req, headers, body, query)
-    // return of()
       .pipe(
+        catchError((err) => {
+          throw {
+            errorMessage: `Tried connecting to destination url ${err.proxyToUrl} via method ${err.method.toUpperCase()}
+          but got error: ${err.makeReqError.message} and code: ${err.makeReqError.code}`,
+          };
+        }),
         delay(1000),
-        repeat(1000),
+        repeat(pollConfig.maxPollCount),
         skipWhile((val: any) => {
-          /*condition is NOT fulfilled*/
-          // return false;
-          console.log(val[0].random);
-          return pollConfig.pollSuccessCb(val);
+          try {
+            return pollSuccessCb(val);
+          } catch (e) {
+            throw ({
+              errorMessage: `${e.errorMessage} PollCondition should be valid Javascript.
+              If you are passing PollCondition in query, it should be url encoded.
+            Reference: https://www.w3schools.com/jsref/jsref_encodeuri.asp
+            Example:
+              condition(JS) : body.random % 10 === 0
+              condition(JS + url encoded): body%5B0%5D.random%2510%20===%200`,
+            });
+          }
         }),
         take(1),
         tap(x => console.log('hi')),
       );
   }
+
+  pollSuccessCb(pollCondition: string): (body: any) => boolean {
+    return (body: any) => {
+      try {
+        // tslint:disable-next-line:no-eval
+        return !eval(pollCondition) as boolean;
+      } catch (e) {
+        throw { errorMessage: `pollCondition: ${pollCondition}.` };
+      }
+    };
+  };
 
 }

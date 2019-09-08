@@ -55,8 +55,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   users: number = 0;
 
   async handleConnection(socket: Socket) {
-
-    const connectionConfig = JSON.parse(socket.handshake.query.data).connectionConfig;
+    let connectionConfig;
+    try {
+      connectionConfig = JSON.parse(socket.handshake.query.data).connectionConfig;
+    } catch (e) {
+      console.log(e);
+      return;
+    }
     delete connectionConfig.imi_bot_middleware_token;
     const roomName = HelperService.querify(connectionConfig);
     socket.join(roomName);

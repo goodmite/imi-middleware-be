@@ -17,7 +17,7 @@ export class AuthController {
   @Post('login')
   async login(@Req() request: Request, @Body() body, @Headers() headers, @Query() query): Promise<any> {
     return new Promise((resolve, reject) => {
-      const proxy_url = body.proxy_url || query.proxy_url;
+      const proxy_url = headers.proxy_url;
       const authProviderUrls = AuthService.AuthProviderUrls;
       if (!proxy_url || !proxy_url.trim || !AuthService.AuthProviderUrls.find(authProviderUrl => authProviderUrl === proxy_url.trim())) {
         throw new HttpException({

@@ -8,27 +8,35 @@ export class WsJwtGuard implements CanActivate {
   }
 
   async canActivate(context: ExecutionContext) {
-    const client = context.switchToWs().getClient();
-    const cookies: string[] = client.handshake.headers.cookie.split('; ');
-    const token_cookie = cookies.find(cookie => cookie.startsWith('imi_bot_middleware_token'));
-    let token;
-    if (token_cookie) {
-      token = token_cookie.split('=')[1];
-    }
+    let cookies: string[];
+    let client;
     try {
-      return this.jwtService.verify(token);
+      client = context.switchToWs().getClient();
+      cookies = client.handshake.headers.cookie.split('; ');
+      console.log('=================', cookies.join());
     } catch (e) {
-      if (e.name === 'TokenExpiredError') {
-        throw new HttpException(`Token has been expired at ${e.expiredAt}. Token: ${token}`, HttpStatus.UNAUTHORIZED);
-      }
-      if (e.name === 'JsonWebTokenError') {
-        if (!token) {
-            throw new HttpException(`Please provide token in headers with name imi_bot_middleware_token`, HttpStatus.UNAUTHORIZED);
-        } else {
-          throw new HttpException(`Bad token. Token: ${token}`, HttpStatus.UNAUTHORIZED);
-        }
-      }
-      throw new HttpException(`Some problem with token. Token: ${token}`, HttpStatus.UNAUTHORIZED);
+      console.log('================canActivate');
     }
+    return true;/*todo: temp*/
+    // const token_cookie = cookies.find(cookie => cookie.startsWith('imi_bot_middleware_token'));
+    // let token;
+    // if (token_cookie) {
+    //   token = token_cookie.split('=')[1];
+    // }
+    // try {
+    //   return this.jwtService.verify(token);
+    // } catch (e) {
+    //   if (e.name === 'TokenExpiredError') {
+    //     throw new HttpException(`Token has been expired at ${e.expiredAt}. Token: ${token}`, HttpStatus.UNAUTHORIZED);
+    //   }
+    //   if (e.name === 'JsonWebTokenError') {
+    //     if (!token) {
+    //       throw new HttpException(`Please provide token in headers with name imi_bot_middleware_token`, HttpStatus.UNAUTHORIZED);
+    //     } else {
+    //       throw new HttpException(`Bad token. Token: ${token}`, HttpStatus.UNAUTHORIZED);
+    //     }
+    //   }
+    //   throw new HttpException(`Some problem with token. Token: ${token}`, HttpStatus.UNAUTHORIZED);
+    // }
   }
 }

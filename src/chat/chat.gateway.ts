@@ -85,7 +85,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   }
   //
-  // @UseGuards(WsJwtGuard)
+  @UseGuards(WsJwtGuard)
   @SubscribeMessage('chat')
   async onChat(client: Socket, message) {
     console.log('==================async onChat');

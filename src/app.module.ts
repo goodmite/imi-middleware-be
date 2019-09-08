@@ -6,10 +6,15 @@ import { SocketModule } from './socket/socket.module';
 import { EventService } from './client/event.service';
 import { ChatGateway } from './chat/chat.gateway';
 import { SocketController } from './socket.controller';
+import { JwtModule } from '@nestjs/jwt';
+import { AuthService } from './auth/auth.service';
+import { AuthController } from './auth/auth.controller';
+import { HttpExceptionFilter } from './http-exception.filter';
 
 @Module({
-  imports: [HttpModule, SocketModule],
-  controllers: [AppController, SocketController],
-  providers: [AppService, ClientService, EventService, ChatGateway],
+  imports: [HttpModule, JwtModule.register({ secret: 'hard!to-guess_secret' }), SocketModule],
+  controllers: [AppController, SocketController, AuthController],
+  providers: [AppService, ClientService, EventService, ChatGateway, AuthService],
 })
-export class AppModule {}
+export class AppModule {
+}

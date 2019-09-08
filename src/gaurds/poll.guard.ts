@@ -1,9 +1,15 @@
 import { Injectable, CanActivate, ExecutionContext, Request, HttpException, HttpStatus } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { JwtService } from '@nestjs/jwt';
+import * as Joi from '@hapi/joi';
+
+const proxySchema = Joi.object().keys({
+  proxy_url: Joi.string().required().uri(),
+  wait_for_response: Joi.bool().optional(),
+}).unknown(true);
 
 @Injectable()
-export class AuthGuard implements CanActivate {
+export class PollGuard implements CanActivate {
   constructor(private readonly jwtService: JwtService) {
   }
 
@@ -23,11 +29,7 @@ export class AuthGuard implements CanActivate {
         throw new HttpException(`Token has been expired at ${e.expiredAt}. Token: ${token}`, HttpStatus.UNAUTHORIZED);
       }
       if (e.name === 'JsonWebTokenError') {
-        if (!token) {
-          throw new HttpException(`Please provide token in headers with name imi_bot_middleware_token`, HttpStatus.UNAUTHORIZED);
-        } else {
-          throw new HttpException(`Bad token. Token: ${token}`, HttpStatus.UNAUTHORIZED);
-        }
+        throw new HttpException(`Bad token. Token: ${token}`, HttpStatus.UNAUTHORIZED);
       }
       throw new HttpException(`Some problem with token. Token: ${token}`, HttpStatus.UNAUTHORIZED);
     }

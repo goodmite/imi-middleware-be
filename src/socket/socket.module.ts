@@ -3,7 +3,7 @@ import { ChatGateway } from '../chat/chat.gateway';
 import { EventService } from '../client/event.service';
 
 @Module({
-  providers: [EventService, ChatGateway],
+  providers: [],
 })
 export class SocketModule {
 }

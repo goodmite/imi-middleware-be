@@ -2,9 +2,13 @@ import { OnGatewayConnection, OnGatewayDisconnect, SubscribeMessage, WebSocketGa
 import { EventService } from '../client/event.service';
 import { Server, Socket } from 'socket.io';
 import { HelperService } from './helper.service';
+import { WsJwtGuard } from '../gaurds/socket-message.guard';
+import { UseGuards } from '@nestjs/common';
 
 @WebSocketGateway()
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
+
+  static allowedNameSpaces = ['BOT'];
 
   constructor(private eventService: EventService) {
     try {
@@ -41,9 +45,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
-  sendMessageToRooms(roomNames: string[]) {
+  sendMessageToRooms(roomNames: string[], event, payload) {
     roomNames.forEach((roomName) => {
-      this.server.to(roomName).emit('chat', 'this is test');
+      this.server.to(roomName).emit(event, payload);
     });
   }
 
@@ -52,7 +56,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   async handleConnection(socket: Socket) {
 
-    const connectionConfig = JSON.parse(socket.handshake.query.connectionConfig);
+    const connectionConfig = JSON.parse(socket.handshake.query.data).connectionConfig;
+    delete connectionConfig.imi_bot_middleware_token;
     const roomName = HelperService.querify(connectionConfig);
     socket.join(roomName);
     // A client has connected
@@ -73,12 +78,19 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   }
 
+  @UseGuards(WsJwtGuard)
   @SubscribeMessage('chat')
   async onChat(client: Socket, message) {
     console.log(message);
     // client.join('test');
     this.server.to('test').emit('chat', 'this is test');
     // client.broadcast.emit('chat', message);
+    if (message && message.options.broadcast) {
+      const selectedRoomNames: string[] = Object.keys(client.rooms).filter(roomName => roomName.includes('namespace='));
+      const event = message.event;
+      const payload = message.payload;
+      client.broadcast.to(selectedRoomNames[0]).emit('chat', message.message);
+    }
   }
 
 }

@@ -1,43 +1,15 @@
 import { HttpService, Injectable, Request } from '@nestjs/common';
 import { Observable, of, throwError } from 'rxjs';
 import { catchError, delay, filter, finalize, map, repeat, repeatWhen, scan, skipWhile, take, takeWhile, tap } from 'rxjs/operators';
-
-/**
- * Our own polling operator!
- */
-// const poll = <T>(comparar: (a: T, b: T) => boolean, initVal: any, delayMs: number, maxCount?: number) => (source: Observable<T>) => {
-//   const id = new Date();
-//   console.log('Start new polling, id: ', id);
-//
-//   return source.pipe(
-//     // repeat after delay
-//     repeatWhen(notifications => {
-//       return notifications.pipe(
-//         delay(delayMs),
-//         takeWhile(count => maxCount === undefined || count < maxCount),
-//       );
-//     }),
-//
-//     // combine current and previous results, use initValue as seed
-//     scan((acc, x: T) => ({ curr: x, prev: acc.curr }), { curr: initVal, prev: undefined }),
-//
-//     // demo only
-//     tap(x => console.log(x)),
-//
-//     // filter result using comparar
-//     filter(acc => !comparar(acc.prev, acc.curr)),
-//
-//     // return the last result (only curr property of scan accumulator acc)
-//     map(acc => acc.curr),
-//
-//     finalize(() => console.log('Stop polling, id: ', id)),
-//   );
-// };
+import * as https from 'https';
 
 @Injectable()
 export class ClientService {
 
+  agent = new https.Agent({ rejectUnauthorized: true });
+
   constructor(private readonly httpService: HttpService) {
+    // httpService.get('', {httpAgent: agent});
   }
 
   /**
@@ -46,19 +18,18 @@ export class ClientService {
    */
   makeReq(req: Request, headers, body, query): Observable<any> {
     const method = req.method.toLowerCase();
-    const proxyToUrl = query.proxyToUrl || body.proxyToUrl || 'https://csrng.net/csrng/csrng.php?min=26max=100';
-    console.log(proxyToUrl);
-    return this.httpService[method](proxyToUrl, body, { headers })
+    const proxy_url = headers.proxy_url;
+    return this.httpService[method](proxy_url, body, { validateStatus: status => true, headers: { 'Content-Type': 'application/json' } })
       .pipe(map((x: any) => {
           return {
             ...(x.data),
-            __proxyToUrl: proxyToUrl,
+            __proxy_url: proxy_url,
           };
         }),
         catchError((err) => {
           throw {
             makeReqError: err,
-            proxyToUrl,
+            proxy_url,
             method,
           };
         }),
@@ -67,18 +38,20 @@ export class ClientService {
 
   poll(req: Request, headers, body, query, pollConfig: { maxPollCount: number, pollDelay: number, pollSuccessCondition }) {
     const pollSuccessCb = this.pollSuccessCb(pollConfig.pollSuccessCondition);
+    let count = 0;
     return this.makeReq(req, headers, body, query)
       .pipe(
         catchError((err) => {
           throw {
-            errorMessage: `Tried connecting to destination url ${err.proxyToUrl} via method ${err.method.toUpperCase()}
+            errorMessage: `Tried connecting to destination url ${err.proxy_url} via method ${err.method.toUpperCase()}
           but got error: ${err.makeReqError.message} and code: ${err.makeReqError.code}`,
           };
         }),
-        delay(1000),
+        delay(pollConfig.pollDelay || 1000),
         repeat(pollConfig.maxPollCount),
         skipWhile((val: any) => {
           try {
+            ++count;
             return pollSuccessCb(val);
           } catch (e) {
             throw ({
@@ -92,7 +65,9 @@ export class ClientService {
           }
         }),
         take(1),
-        tap(x => console.log('hi')),
+        map((value) => {
+          return { value, attemptCount: count };
+        }),
       );
   }
 

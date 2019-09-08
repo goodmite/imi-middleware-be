@@ -14,7 +14,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     try {
       EventService.data.subscribe();
     } catch (e) {
-      console.log(e);
+      console.log('===============', e);
     }
   }
 
@@ -38,7 +38,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
             // this.server.to(key).emit('chat', 'this is test');
           }
         } catch (e) {
-          console.log(e);
+          console.log('===============', e);
         }
       });
       return { selectedRooms, selectedRoomNames };
@@ -55,11 +55,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   users: number = 0;
 
   async handleConnection(socket: Socket) {
+    console.log('=====================handleConnection');
     let connectionConfig;
     try {
       connectionConfig = JSON.parse(socket.handshake.query.data).connectionConfig;
     } catch (e) {
-      console.log(e);
+      console.log('===============', e);
       return;
     }
     delete connectionConfig.imi_bot_middleware_token;
@@ -74,7 +75,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   async handleDisconnect(test) {
-    console.log(test);
+    console.log('=====================handleDisconnect');
+    // console.log(test);
     // A client has disconnected
     this.users--;
 
@@ -86,7 +88,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @UseGuards(WsJwtGuard)
   @SubscribeMessage('chat')
   async onChat(client: Socket, message) {
-    console.log(message);
+    console.log('==================async onChat');
     // client.join('test');
     this.server.to('test').emit('chat', 'this is test');
     // client.broadcast.emit('chat', message);

@@ -9,5 +9,5 @@ async function bootstrap() {
 
 bootstrap()
   .then(() => {
-    console.log('Bootstrap success:: ' + process.env.port || process.env.PORT || 3000);
+    console.log('Bootstrap success:: ' + (process.env.port || process.env.PORT || 3000));
   });

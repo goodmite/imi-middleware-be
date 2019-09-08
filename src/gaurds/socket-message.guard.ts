@@ -15,7 +15,7 @@ export class WsJwtGuard implements CanActivate {
       cookies = client.handshake.headers.cookie.split('; ');
       console.log('=================', cookies.join());
     } catch (e) {
-      console.log('================canActivate');
+      console.log('================canActivate catch', e);
     }
     return true;/*todo: temp*/
     // const token_cookie = cookies.find(cookie => cookie.startsWith('imi_bot_middleware_token'));

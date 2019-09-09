@@ -13,8 +13,8 @@ import * as Joi from '@hapi/joi';
 import { ProxyGuard } from './gaurds/proxy.guard';
 
 const personDataSchema = Joi.object().keys({
-  pollSuccessCondition: Joi.string(),
-  maxPollCount: Joi.number(),
+  poll_success_condition: Joi.string(),
+  max_poll_count: Joi.number(),
   pollDuration: Joi.number().optional(),
 });
 
@@ -86,17 +86,17 @@ export class AppController {
   @All('poll')
   @UsePipes(new JoiValidationPipe(personDataSchema))
   async poll(@Req() request: Request, @Body() body, @Query() query, @Headers() headers): Promise<any> {
-    const maxPollCount = headers.maxPollCount || 5;
+    const max_poll_count = headers.max_poll_count || 5;
     const proxy_url = headers.proxy_url;
-    const pollSuccessCondition = headers.pollSuccessCondition;
-    if (!pollSuccessCondition) {
-      throw new HttpException('Please provide pollSuccessCondition in headers', HttpStatus.UNPROCESSABLE_ENTITY);
+    const poll_success_condition = headers.poll_success_condition;
+    if (!poll_success_condition) {
+      throw new HttpException('Please provide poll_success_condition in headers', HttpStatus.UNPROCESSABLE_ENTITY);
     }
-    if (proxy_url) {
+    if (!proxy_url) {
       throw new HttpException('Please provide proxy_url in headers', HttpStatus.UNPROCESSABLE_ENTITY);
     }
     return new Promise((resolve, reject) => {
-      this.clientService.poll(request, headers, body, query, { pollSuccessCondition, maxPollCount, pollDelay: 5000 })
+      this.clientService.poll(request, headers, body, query, { poll_success_condition, max_poll_count, pollDelay: 5000 })
         .subscribe((data) => {
             console.log(data);
             resolve({ ...data, __status: 'success', error: false });
@@ -109,8 +109,8 @@ export class AppController {
             resolve({
               __status: 'failed',
               error: false,
-              message: `Tried ${maxPollCount} time but could not fulfill the condition`,
-              pollSuccessCondition,
+              message: `Tried ${max_poll_count} time but could not fulfill the condition`,
+              poll_success_condition,
             });
           });
     });

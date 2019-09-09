@@ -36,8 +36,8 @@ export class ClientService {
       );
   }
 
-  poll(req: Request, headers, body, query, pollConfig: { maxPollCount: number, pollDelay: number, pollSuccessCondition }) {
-    const pollSuccessCb = this.pollSuccessCb(pollConfig.pollSuccessCondition);
+  poll(req: Request, headers, body, query, pollConfig: { max_poll_count: number, pollDelay: number, poll_success_condition }) {
+    const pollSuccessCb = this.pollSuccessCb(pollConfig.poll_success_condition);
     let count = 0;
     return this.makeReq(req, headers, body, query)
       .pipe(
@@ -48,7 +48,7 @@ export class ClientService {
           };
         }),
         delay(pollConfig.pollDelay || 1000),
-        repeat(pollConfig.maxPollCount),
+        repeat(pollConfig.max_poll_count),
         skipWhile((val: any) => {
           try {
             ++count;

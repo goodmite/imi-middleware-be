@@ -19,7 +19,7 @@ export class SocketController {
 
   @Post('sendMessage')
   sendMessage(@Req() request: Request, @Body() body, @Query() query, @Headers() headers): { rooms: object[] } {
-    const selectedRoomsData = this.chatGateway.queryRooms(body.query);
+    const selectedRoomsData = this.chatGateway.queryRooms(body.consumer);
     const event = body.event;
     const payload = body.payload;
     this.chatGateway.sendMessageToRooms(selectedRoomsData.selectedRoomNames, event, payload);

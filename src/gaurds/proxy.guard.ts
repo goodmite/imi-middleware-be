@@ -23,8 +23,9 @@ export class ProxyGuard implements CanActivate {
   validateRequest(req: Request) {
     const headers: any = req.headers;
     const { error } = Joi.validate(headers, proxySchema);
+    const message = error && error.details[0].message;
     if (error) {
-      throw new BadRequestException({ name: error.name, error_details: error.details, error: true, message: error.details[0].message });
+      throw new BadRequestException({ name: error.name, error_details: error.details, error: true, message });
     }
     return true;
   }

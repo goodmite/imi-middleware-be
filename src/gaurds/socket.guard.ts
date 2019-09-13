@@ -28,8 +28,13 @@ export class SocketGuard implements CanActivate {
 
   validateRequest(req: Request) {
     const { error } = Joi.validate(req.body, bodySchema);
+    let message = error && error.details[0].message;
     if (error) {
-      throw new BadRequestException({ name: error.name, error_details: error.details, error: true, message: error.details[0].message });
+      if ((req.body as any).query) {
+        message = 'Usage of query is not allowed anymore. Pls use consumer instead.';
+        throw new BadRequestException({ error: true, message });
+      }
+      throw new BadRequestException({ name: error.name, error_details: error.details, error: true, message });
     }
     return true;
   }

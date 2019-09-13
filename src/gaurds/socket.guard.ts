@@ -9,7 +9,7 @@ const querySchema = Joi.object().keys({
 }).unknown(true);
 
 const bodySchema = Joi.object().keys({
-  query: querySchema,
+  consumer: querySchema,
   event: Joi.string().required(),
   payload: Joi.any().optional(),
 });
@@ -29,7 +29,7 @@ export class SocketGuard implements CanActivate {
   validateRequest(req: Request) {
     const { error } = Joi.validate(req.body, bodySchema);
     if (error) {
-      throw new BadRequestException({ name: error.name, details: error.details });
+      throw new BadRequestException({ name: error.name, error_details: error.details, error: true, message: error.details[0].message });
     }
     return true;
   }

@@ -23,6 +23,18 @@ export class SocketController {
     const event = body.event;
     const payload = body.payload;
     this.chatGateway.sendMessageToRooms(selectedRoomsData.selectedRoomNames, event, payload);
+    if (selectedRoomsData.selectedRooms.length === 0) {
+      const namespace = body.consumer.namespace;
+      const allRoomsInNamespace = this.chatGateway.queryRooms({ namespace });
+      const allRoomsInNamespaceCount = allRoomsInNamespace.selectedRooms.length;
+      if (allRoomsInNamespace.selectedRooms.length === 0) {
+        throw new HttpException({ error: true, message: `There are no clients in ${namespace} namespace` }, HttpStatus.UNPROCESSABLE_ENTITY);
+      }
+      throw new HttpException({
+        error: true,
+        message: `No clients found with these parameters. Total clients in ${namespace} namespace =  ${allRoomsInNamespaceCount}`,
+      }, HttpStatus.UNPROCESSABLE_ENTITY);
+    }
     return {
       rooms: selectedRoomsData.selectedRooms,
     };

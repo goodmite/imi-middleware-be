@@ -30,7 +30,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
           const roomData = HelperService.Objectify(roomName);
           const isRoomMatch: boolean = Object.keys(roomQueryObj).every((keyTemp) => {
             console.log(keyTemp);
-            return roomQueryObj[keyTemp] === roomData[keyTemp];
+            // tslint:disable-next-line:triple-equals
+            return roomQueryObj[keyTemp] == roomData[keyTemp];
           });
           if (isRoomMatch) {
             selectedRoomNames.push(roomName);

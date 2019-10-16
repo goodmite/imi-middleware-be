@@ -3,14 +3,15 @@ import { Observable } from 'rxjs';
 import { JwtService } from '@nestjs/jwt';
 import { ChatGateway } from '../chat/chat.gateway';
 import * as Joi from '@hapi/joi';
+import { allowedNameSpace, namespaceEventMap } from '../socket-event-map';
 
 const querySchema = Joi.object().keys({
-  namespace: Joi.string().required(),
+  namespace: Joi.string().valid(...allowedNameSpace).alphanum().required(),
 }).unknown(true);
 
 const bodySchema = Joi.object().keys({
   consumer: querySchema,
-  event: Joi.string().required(),
+  event: Joi.string().alphanum().valid(...namespaceEventMap.BOT.events).required(), /* todo: use a dynamic approach*/
   payload: Joi.any().optional(),
 });
 

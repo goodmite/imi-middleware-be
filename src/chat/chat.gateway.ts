@@ -7,9 +7,6 @@ import { UseGuards } from '@nestjs/common';
 
 @WebSocketGateway()
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
-
-  static allowedNameSpaces = ['BOT'];
-
   constructor(private eventService: EventService) {
     try {
       EventService.data.subscribe();

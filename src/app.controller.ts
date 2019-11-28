@@ -19,7 +19,7 @@ const personDataSchema = Joi.object().keys({
 });
 
 @Controller('api/v1/')
-@UseGuards(AuthGuard)
+// @UseGuards(AuthGuard)
 export class AppController {
   constructor(private readonly appService: AppService,
               private eventService: EventService,
@@ -28,92 +28,70 @@ export class AppController {
               private clientService: ClientService) {
   }
 
-  @Get('healthy')
-  getHello(): string {
+  @Get('heartbeat')
+  getHello() {
     return this.appService.getHello();
   }
 
-  @Post('healthy')
-  getHelloPost(@Req() request: Request, @Body() body, @Query() query, @Headers() headers): string {
-    return this.appService.getHello();
-  }
+  // @Post('healthy')
+  // getHelloPost(@Req() request: Request, @Body() body, @Query() query, @Headers() headers): string {
+  //   return this.appService.getHello();
+  // }
 
-  // @Post('sendMessage')
-  // sendMessage(@Req() request: Request, @Body() body, @Query() query, @Headers() headers): { rooms: object[] } {
-  //   if (!body.namespace) {
-  //     throw new HttpException('Namespace not provided. If you dont have any, use TEMP', HttpStatus.UNPROCESSABLE_ENTITY);
-  //   }
-  //   const selectedRoomsData = this.chatGateway.queryRooms(body);
-  //   this.chatGateway.sendMessageToRooms(selectedRoomsData.selectedRoomNames);
-  //   return {
-  //     rooms: selectedRoomsData.selectedRooms,
-  //   };
+
+  // @All('proxy')
+  // @UseGuards(ProxyGuard)
+  // async proxy(@Req() request: Request, @Body() body, @Query() query, @Headers() headers): Promise<any> {
+  //   return new Promise((resolve, reject) => {
+  //     if (headers.wait_for_response === 'false') {
+  //       this.clientService.makeReq(request, headers, body, query)
+  //         .subscribe();
+  //       resolve({ ack: true });
+  //       return;
+  //     }
+  //     this.clientService.makeReq(request, headers, body, query)
+  //       .pipe(tap((data) => {
+  //           resolve(data);
+  //         }),
+  //         catchError((err) => {
+  //           reject(new HttpException(err, HttpStatus.UNPROCESSABLE_ENTITY));
+  //           return of();
+  //         }))
+  //       .subscribe();
+  //   });
   // }
   //
-  // @Post('queryRooms')
-  // queryRooms(@Req() request: Request, @Body() body, @Query() query, @Headers() headers): { rooms: object[] } {
-  //   if (!body.namespace) {
-  //     throw new HttpException('Namespace not provided. If you dont have any, use TEMP', HttpStatus.UNPROCESSABLE_ENTITY);
+  // @All('poll')
+  // @UsePipes(new JoiValidationPipe(personDataSchema))
+  // async poll(@Req() request: Request, @Body() body, @Query() query, @Headers() headers): Promise<any> {
+  //   const max_poll_count = headers.max_poll_count || 5;
+  //   const proxy_url = headers.proxy_url;
+  //   const poll_success_condition = headers.poll_success_condition;
+  //   if (!poll_success_condition) {
+  //     throw new HttpException('Please provide poll_success_condition in headers', HttpStatus.UNPROCESSABLE_ENTITY);
   //   }
-  //   const selectedRoomsData = this.chatGateway.queryRooms(body);
-  //   return {
-  //     rooms: selectedRoomsData.selectedRooms,
-  //   };
+  //   if (!proxy_url) {
+  //     throw new HttpException('Please provide proxy_url in headers', HttpStatus.UNPROCESSABLE_ENTITY);
+  //   }
+  //   return new Promise((resolve, reject) => {
+  //     this.clientService.poll(request, headers, body, query, { poll_success_condition, max_poll_count, pollDelay: 5000 })
+  //       .subscribe((data) => {
+  //           console.log(data);
+  //           resolve({ ...data, __status: 'success', error: false });
+  //         }, (error) => {
+  //           const errorMessage = error.errorMessage || JSON.stringify(error);
+  //           const errObj = { __status: 'failed', error: true, errorMessage };
+  //           reject(new HttpException(errObj, HttpStatus.UNPROCESSABLE_ENTITY));
+  //         },
+  //         () => {
+  //           resolve({
+  //             __status: 'failed',
+  //             error: false,
+  //             message: `Tried ${max_poll_count} time but could not fulfill the condition`,
+  //             poll_success_condition,
+  //           });
+  //         });
+  //   });
   // }
-
-  @All('proxy')
-  @UseGuards(ProxyGuard)
-  async proxy(@Req() request: Request, @Body() body, @Query() query, @Headers() headers): Promise<any> {
-    return new Promise((resolve, reject) => {
-      if (headers.wait_for_response === 'false') {
-        this.clientService.makeReq(request, headers, body, query)
-          .subscribe();
-        resolve({ ack: true });
-        return;
-      }
-      this.clientService.makeReq(request, headers, body, query)
-        .pipe(tap((data) => {
-            resolve(data);
-          }),
-          catchError((err) => {
-            reject(new HttpException(err, HttpStatus.UNPROCESSABLE_ENTITY));
-            return of();
-          }))
-        .subscribe();
-    });
-  }
-
-  @All('poll')
-  @UsePipes(new JoiValidationPipe(personDataSchema))
-  async poll(@Req() request: Request, @Body() body, @Query() query, @Headers() headers): Promise<any> {
-    const max_poll_count = headers.max_poll_count || 5;
-    const proxy_url = headers.proxy_url;
-    const poll_success_condition = headers.poll_success_condition;
-    if (!poll_success_condition) {
-      throw new HttpException('Please provide poll_success_condition in headers', HttpStatus.UNPROCESSABLE_ENTITY);
-    }
-    if (!proxy_url) {
-      throw new HttpException('Please provide proxy_url in headers', HttpStatus.UNPROCESSABLE_ENTITY);
-    }
-    return new Promise((resolve, reject) => {
-      this.clientService.poll(request, headers, body, query, { poll_success_condition, max_poll_count, pollDelay: 5000 })
-        .subscribe((data) => {
-            console.log(data);
-            resolve({ ...data, __status: 'success', error: false });
-          }, (error) => {
-            const errorMessage = error.errorMessage || JSON.stringify(error);
-            const errObj = { __status: 'failed', error: true, errorMessage };
-            reject(new HttpException(errObj, HttpStatus.UNPROCESSABLE_ENTITY));
-          },
-          () => {
-            resolve({
-              __status: 'failed',
-              error: false,
-              message: `Tried ${max_poll_count} time but could not fulfill the condition`,
-              poll_success_condition,
-            });
-          });
-    });
-  }
 
 }

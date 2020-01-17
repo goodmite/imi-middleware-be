@@ -11,7 +11,7 @@ const querySchema = Joi.object().keys({
 
 const bodySchema = Joi.object().keys({
   consumer: querySchema,
-  event: Joi.string().alphanum().valid(...namespaceEventMap.BOT.events).required(), /* todo: use a dynamic approach*/
+  event: Joi.string().valid(...namespaceEventMap.BOT.events).required(), /* todo: use a dynamic approach*/
   payload: Joi.any().optional(),
 });
 

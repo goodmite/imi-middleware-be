@@ -45,7 +45,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   sendMessageToRooms(roomNames: string[], event, payload) {
     roomNames.forEach((roomName) => {
-      this.server.to(roomName).emit('train', payload);
+      this.server.to(roomName).emit(event, payload);
     });
   }
 

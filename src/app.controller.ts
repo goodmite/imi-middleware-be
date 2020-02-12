@@ -38,29 +38,27 @@ export class AppController {
   //   return this.appService.getHello();
   // }
 
+  @All('proxy')
+  async proxy(@Req() request: Request, @Body() body, @Query() query, @Headers() headers): Promise<any> {
+    return new Promise((resolve, reject) => {
+      if (headers.wait_for_response === 'false') {
+        this.clientService.makeReq(request, headers, body, query)
+          .subscribe();
+        resolve({ ack: true });
+        return;
+      }
+      this.clientService.makeReq(request, headers, body, query)
+        .pipe(tap((data) => {
+            resolve(data);
+          }),
+          catchError((err) => {
+            reject(new HttpException(err, HttpStatus.UNPROCESSABLE_ENTITY));
+            return of();
+          }))
+        .subscribe();
+    });
+  }
 
-  // @All('proxy')
-  // @UseGuards(ProxyGuard)
-  // async proxy(@Req() request: Request, @Body() body, @Query() query, @Headers() headers): Promise<any> {
-  //   return new Promise((resolve, reject) => {
-  //     if (headers.wait_for_response === 'false') {
-  //       this.clientService.makeReq(request, headers, body, query)
-  //         .subscribe();
-  //       resolve({ ack: true });
-  //       return;
-  //     }
-  //     this.clientService.makeReq(request, headers, body, query)
-  //       .pipe(tap((data) => {
-  //           resolve(data);
-  //         }),
-  //         catchError((err) => {
-  //           reject(new HttpException(err, HttpStatus.UNPROCESSABLE_ENTITY));
-  //           return of();
-  //         }))
-  //       .subscribe();
-  //   });
-  // }
-  //
   // @All('poll')
   // @UsePipes(new JoiValidationPipe(personDataSchema))
   // async poll(@Req() request: Request, @Body() body, @Query() query, @Headers() headers): Promise<any> {

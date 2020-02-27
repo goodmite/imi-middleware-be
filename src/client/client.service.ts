@@ -21,16 +21,16 @@ export class ClientService {
     const proxy_url = headers.proxy_url;
     delete headers.proxy_url;
     const imi_bot_middleware_token = headers.imi_bot_middleware_token;
-    let headersToSend = { 'Content-Type': 'application/json' };
+    let headersToSend: any = { 'Content-Type': 'application/json' };
     if (imi_bot_middleware_token) {
-      headers = {
-        ...headers,
+      headersToSend = {
+        ...headersToSend,
         imi_bot_middleware_token,
       };
     }
     return this.httpService[method](proxy_url, body, {
       validateStatus: status => true,
-      headers:headersToSend,
+      headers: headersToSend,
     })
       .pipe(map((x: any) => {
           return {

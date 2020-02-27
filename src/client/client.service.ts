@@ -19,7 +19,19 @@ export class ClientService {
   makeReq(req: Request, headers, body, query): Observable<any> {
     const method = req.method.toLowerCase();
     const proxy_url = headers.proxy_url;
-    return this.httpService[method](proxy_url, body, { validateStatus: status => true, headers: { 'Content-Type': 'application/json' } })
+    delete headers.proxy_url;
+    const imi_bot_middleware_token = headers.imi_bot_middleware_token;
+    let headersToSend = { 'Content-Type': 'application/json' };
+    if (imi_bot_middleware_token) {
+      headers = {
+        ...headers,
+        imi_bot_middleware_token,
+      };
+    }
+    return this.httpService[method](proxy_url, body, {
+      validateStatus: status => true,
+      headers:headersToSend,
+    })
       .pipe(map((x: any) => {
           return {
             ...(x.data),
